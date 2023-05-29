@@ -1,0 +1,25 @@
+{
+  "name": "family-ts-types",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaclajon/ts-family-relationships-types.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vaclajon/ts-family-relationships-types/issues"
+  },
+  "homepage": "https://github.com/vaclajon/ts-family-relationships-types#readme",
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "ts-toolbelt": "^9.6.0",
+    "typescript": "^5.0.4"
+  }
+}
