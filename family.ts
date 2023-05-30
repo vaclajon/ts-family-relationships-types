@@ -1,5 +1,6 @@
 import { Equal, Expect, SubOne, ValuesToKeys } from "./util";
 import { Lower } from "ts-toolbelt/out/Number/Lower";
+import { Greater } from "ts-toolbelt/out/Number/Greater";
 
 // Relation definitions
 type ChildrenToFather = {
@@ -15,6 +16,7 @@ type ChildrenToMother = {
   Bob: "Mary";
   Cindy: "Sue";
   Alice: "Jane";
+  Jackie: 'Jane';
   Pete: "Cindy";
   Jean: "Alice";
 };
@@ -36,6 +38,9 @@ type NamesToGender = {
   Jean: "MALE";
   Jackie: "FEMALE";
 };
+
+// Known limitation here: Assumes very puristic world where people can mary only once
+type Marriages = [["George", "Mary"], ["Alice", "Dave"]];
 
 // Names
 type Names =
@@ -166,6 +171,76 @@ type Nephew<Name extends Names> = Son<Siblings<Name>>;
 
 type Cousin<Name extends Names> = Children<Siblings<Parent<Name>>>;
 
+type Wife<
+  Name extends Names,
+  MarriageList extends any[] = Marriages
+> = MarriageList extends never
+  ? never
+  : MarriageList extends [infer FirstCouple, ...infer Rest]
+  ? Greater<Rest["length"], 1> extends true
+    ? Wife<Name, Rest>
+    : FirstCouple extends [Name, infer Second]
+    ? Second extends Names
+      ? NamesToGender[Second] extends "FEMALE"
+        ? Second
+        : never
+      : never
+    : FirstCouple extends [infer First, Name]
+    ? First extends Names
+      ? NamesToGender[First] extends "FEMALE"
+        ? First
+        : never
+      : never
+    : Wife<Name, Rest>
+  : never;
+
+// Lazy to unify with Wife type O:)
+type Husband<
+  Name extends Names,
+  MarriageList extends any[] = Marriages
+> = MarriageList extends never
+  ? never
+  : MarriageList extends [infer FirstCouple, ...infer Rest]
+  ? FirstCouple extends [Name, infer Second]
+    ? Second extends Names
+      ? NamesToGender[Second] extends "MALE"
+        ? Second
+        : never
+      : never
+    : FirstCouple extends [infer First, Name]
+    ? First extends Names
+      ? NamesToGender[First] extends "MALE"
+        ? First
+        : never
+      : never
+    : Husband<Name, Rest>
+  : never;
+
+type SisterInLaw<Name extends Names> =
+  | Sister<Husband<Name>>
+  | Sister<Wife<Name>>;
+type BrotherInLaw<Name extends Names> =
+  | Brother<Wife<Name>>
+  | Brother<Husband<Name>>;
+
+type MotherInLaw<Name extends Names> =
+  | Mother<Wife<Name>>
+  | Mother<Husband<Name>>;
+type FatherInLaw<Name extends Names> =
+  | Father<Wife<Name>>
+  | Father<Husband<Name>>;
+
+type StepMother<Name extends Names> = Exclude<
+  Mother<Siblings<Name>>,
+  Mother<Name>
+>;
+
+type StepFather<Name extends Names> = Exclude<
+    Father<Siblings<Name>>,
+    Father<Name>
+>;
+
+
 // Helper validation object
 type validation = [
   Expect<Equal<Parent<"Alice">, "George" | "Jane">>,
@@ -174,7 +249,7 @@ type validation = [
   Expect<Equal<Children<"Bob">, "Cindy" | "Dave">>,
   Expect<Equal<Children<"George">, "Alice" | "Bob" | "Eve">>,
   Expect<Equal<Siblings<"Bob">, "Alice" | "Eve">>,
-  Expect<Equal<Siblings<"Alice">, "Bob" | "Eve">>,
+  Expect<Equal<Siblings<"Alice">, "Bob" | "Eve" | 'Jackie'>>,
 
   Expect<Equal<GrandChild<"George">, "Cindy" | "Dave" | "Jean">>,
   Expect<Equal<GrandChild<"Mary">, "Cindy" | "Dave">>,
@@ -212,5 +287,24 @@ type validation = [
 
   Expect<Equal<Niece<"Alice">, "Cindy">>,
   Expect<Equal<Nephew<"Alice">, "Dave">>,
-  Expect<Equal<Cousin<"Jean">, "Dave" | "Cindy">>
+  Expect<Equal<Cousin<"Jean">, "Dave" | "Cindy">>,
+
+  Expect<Equal<Wife<"George">, "Mary">>,
+  Expect<Equal<Husband<"George">, never>>,
+  Expect<Equal<Wife<"Mary">, never>>,
+  Expect<Equal<Husband<"Mary">, "George">>,
+  Expect<Equal<Husband<"Alice">, "Dave">>,
+  Expect<Equal<SisterInLaw<"Alice">, "Cindy">>,
+  Expect<Equal<BrotherInLaw<"Dave">, "Bob">>,
+  Expect<Equal<SisterInLaw<"Dave">, "Eve" | 'Jackie'>>,
+
+  Expect<Equal<MotherInLaw<"Dave">, "Jane">>,
+  Expect<Equal<MotherInLaw<"Alice">, never>>,
+  Expect<Equal<FatherInLaw<"Dave">, "George">>,
+  Expect<Equal<FatherInLaw<"Alice">, "Bob">>,
+
+  Expect<Equal<StepMother<"Alice">, "Mary">>,
+  Expect<Equal<StepMother<"Bob">, "Jane">>,
+
+  Expect<Equal<StepFather<"Alice">, "Dave">>,
 ];
