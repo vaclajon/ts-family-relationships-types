@@ -8,7 +8,7 @@ type ChildrenToFather = {
   Alice: "George";
   Cindy: "Bob";
   Dave: "Bob";
-  Jackie: "Dave";
+  Jackie: "Dave"; // Extra
   Eve: "George";
 };
 
@@ -16,14 +16,15 @@ type ChildrenToMother = {
   Bob: "Mary";
   Cindy: "Sue";
   Alice: "Jane";
-  Jackie: 'Jane';
-  Pete: "Cindy";
-  Jean: "Alice";
+  Jackie: 'Jane'; // Extra
+  Pete: "Cindy"; // Extra
+  Jean: "Alice"; // Extra
 };
 
 type FatherToChildren = ValuesToKeys<ChildrenToFather>;
 type MotherToChildren = ValuesToKeys<ChildrenToMother>;
 
+type Gender = "FEMALE" | "MALE";
 type NamesToGender = {
   Bob: "MALE";
   George: "MALE";
@@ -50,8 +51,6 @@ type Names =
   | keyof ValuesToKeys<ChildrenToMother>;
 
 // Gender helpers
-type Gender = "FEMALE" | "MALE";
-
 type FilterNamesByGender<G extends Gender> = ValuesToKeys<NamesToGender>[G];
 type MaleNames = FilterNamesByGender<"MALE">;
 type FemaleNames = FilterNamesByGender<"FEMALE">;
